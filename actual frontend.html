@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ThreadCycle Local</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="logo-icon">TC</div>
+                <span class="brand-text">ThreadCycle</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <h2 class="page-title">Latest Listings</h2>
+        <div id="listings-container" class="listings-grid">
+            <p id="loading-text" style="color: var(--text-muted);">Connecting to local database...</p>
+        </div>
+    </main>
+
+    <script>
+        const CAT_EMOJI = { "Tops":"👕", "Bottoms":"👖", "Jackets":"🧥", "Footwear":"👟" };
+        const getEmoji = (c) => CAT_EMOJI[c] || "🏷️";
+        const formatPrice = (p) => `R ${Number(p).toFixed(2)}`;
+
+        async function loadListings() {
+            try {
+                const response = await fetch('api/read.php');
+                const result = await response.json();
+                
+                const container = document.getElementById('listings-container');
+                container.innerHTML = ''; 
+
+                if (!result.success) {
+                    container.innerHTML = `<p style="color: red;">Error: ${result.error}</p>`;
+                    return;
+                }
+
+                if (result.data.length === 0) {
+                    container.innerHTML = `<p style="color: var(--text-muted);">No items found in database.</p>`;
+                    return;
+                }
+
+                result.data.forEach(item => {
+                    // Create the card div using our new CSS classes
+                    const card = document.createElement('div');
+                    card.className = "card";
+                    card.innerHTML = `
+                        <div class="card-image-placeholder">
+                            ${getEmoji(item.category)}
+                        </div>
+                        <div class="card-body">
+                            <div class="card-header">
+                                <h3 class="card-title">${item.title}</h3>
+                                <span class="card-price">${formatPrice(item.price)}</span>
+                            </div>
+                            <p class="card-desc">${item.description}</p>
+                            <div class="card-footer">
+                                <span class="badge">${item.item_condition}</span>
+                                <span class="seller-name">Seller: ${item.seller_name}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                console.error("Fetch failed:", error);
+                document.getElementById('loading-text').innerText = "Failed to connect to backend.";
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadListings);
+    </script>
+</body>
+</html>
